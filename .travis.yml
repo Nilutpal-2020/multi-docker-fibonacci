@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t nilutpal/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true nilutpal/react-test npm test
+
+after_success:
+  - docker build -t nilutpal/multi-client ./client
+  - docker build -t nilutpal/multi-nginx ./nginx
+  - docker build -t nilutpal/multi-server ./server
+  - docker build -t nilutpal/multi-worker ./worker
+  # Log in to the docker CLI
+  # create environment variables inside travis.com
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push nilutpal/multi-client
+  - docker push nilutpal/multi-nginx
+  - docker push nilutpal/multi-server
+  - docker push nilutpal/multi-worker
